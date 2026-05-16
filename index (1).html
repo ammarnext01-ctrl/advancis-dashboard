@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advancis Dashboard — Dr. Abdallh Mostafa</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--sidebar-bg:#0a0d13;--card-bg:#151b27;--card-bg2:#1a2235;
+  --border:rgba(255,255,255,0.07);--text:#e8edf5;--text-muted:#6b7a99;--text-dim:#3d4a66;
+  --blue:#4f8ef7;--green:#22d3a0;--purple:#9b72f7;--orange:#f7922a;--teal:#2accc4;--pink:#f7547a;
+  --font:'Inter',system-ui,sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;min-height:100vh;overflow-x:hidden}
+
+/* SIDEBAR */
+.sidebar{width:170px;min-width:170px;background:var(--sidebar-bg);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;position:sticky;top:0;height:100vh;}
+.logo{display:flex;align-items:center;gap:10px;padding:0 18px 24px;border-bottom:1px solid var(--border)}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#4f8ef7,#9b72f7);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff}
+.logo-text{font-size:14px;font-weight:700;color:var(--text)}
+.nav{flex:1;padding:16px 0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 18px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:all 0.2s;position:relative;border-left:3px solid transparent;}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+.nav-item.active{color:var(--blue);background:rgba(79,142,247,0.1);border-left:3px solid var(--blue)}
+.nav-item svg{width:16px;height:16px;flex-shrink:0}
+.sidebar-footer{padding:16px 18px;border-top:1px solid var(--border)}
+.avatar-ring{width:44px;height:44px;border-radius:50%;border:2px solid var(--orange);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;background:var(--card-bg2)}
+.avatar-icon{font-size:20px}
+.sidebar-name{font-size:11px;font-weight:700;color:var(--orange);text-align:center}
+.sidebar-role{font-size:10px;color:var(--text-muted);text-align:center;margin-top:3px}
+.gold-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--orange),transparent);margin:8px auto 0}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* TOPBAR */
+.topbar{background:var(--sidebar-bg);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-left h1{font-size:20px;font-weight:700;color:var(--text)}
+.topbar-left p{font-size:13px;color:var(--text-muted);margin-top:3px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.date-btn{display:flex;align-items:center;gap:8px;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--text-muted);cursor:pointer;transition:border-color 0.2s;}
+.date-btn:hover{border-color:var(--blue);color:var(--text)}
+.date-btn svg{width:14px;height:14px}
+.icon-btn{width:36px;height:36px;border-radius:50%;background:var(--card-bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:all 0.2s;}
+.icon-btn:hover{border-color:var(--blue);background:rgba(79,142,247,0.1)}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:#f7547a;position:absolute;top:6px;right:6px;border:2px solid var(--sidebar-bg)}
+
+/* CONTENT */
+.content{flex:1;padding:24px 28px;overflow-y:auto;display:flex;flex-direction:column;gap:22px}
+
+/* PAGE SECTIONS */
+.page-section{display:none;flex-direction:column;gap:22px}
+.page-section.active{display:flex}
+
+/* KPI CARDS */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.kpi{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:18px 18px 14px;display:flex;flex-direction:column;gap:6px;transition:transform 0.2s,border-color 0.2s;cursor:default;}
+.kpi:hover{transform:translateY(-2px);border-color:rgba(255,255,255,0.14)}
+.kpi-top{display:flex;align-items:center;gap:10px}
+.kpi-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.kpi-lbl{font-size:11px;color:var(--text-muted);font-weight:500}
+.kpi-val{font-size:24px;font-weight:800;color:var(--text);letter-spacing:-0.5px;line-height:1}
+.kpi-badge{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600}
+.kpi-badge.up{color:#22d3a0}.kpi-badge.dn{color:#f7547a}
+.kpi-badge span{font-size:10px;color:var(--text-muted);font-weight:400}
+.sparkline-wrap{height:38px;margin-top:4px}
+
+/* MID ROW */
+.mid-row{display:grid;grid-template-columns:1.6fr 1fr;gap:16px}
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between}
+.card-title{font-size:14px;font-weight:700;color:var(--text)}
+.period-btn{display:flex;align-items:center;gap:5px;background:var(--card-bg2);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-size:11px;color:var(--text-muted);cursor:pointer;transition:all 0.2s;}
+.period-btn:hover{border-color:var(--blue);color:var(--text)}
+.period-btn.active-period{border-color:var(--blue);color:var(--blue);background:rgba(79,142,247,0.1)}
+.big-val{font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--text)}
+.big-val .up{font-size:13px;font-weight:600;color:#22d3a0;margin-left:8px}
+.big-val .vs{font-size:11px;color:var(--text-muted);font-weight:400}
+.chart-wrap{position:relative}
+
+/* DONUT */
+.donut-container{display:flex;align-items:center;gap:20px}
+.donut-wrap{position:relative;width:180px;height:180px;flex-shrink:0}
+.donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.donut-center .dv{font-size:18px;font-weight:800;color:var(--text)}
+.donut-center .dl{font-size:10px;color:var(--text-muted)}
+.donut-legend{flex:1;display:flex;flex-direction:column;gap:8px}
+.dl-row{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;padding:3px 5px;border-radius:6px;transition:background 0.15s}
+.dl-row:hover{background:rgba(255,255,255,0.04)}
+.dl-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.dl-name{font-size:12px;color:var(--text-muted);flex:1}
+.dl-amt{font-size:12px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.dl-pct{font-size:11px;color:var(--text-dim);min-width:36px;text-align:right}
+
+/* BOT ROW */
+.bot-row{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:16px}
+
+/* PRODUCTS */
+.prod-header{display:flex;justify-content:space-between;align-items:center}
+.prod-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;border-radius:6px;padding-left:4px;}
+.prod-row:last-child{border-bottom:none}
+.prod-row:hover{background:rgba(255,255,255,0.03)}
+.prod-num{font-size:12px;color:var(--text-muted);width:14px;flex-shrink:0}
+.prod-icon{width:34px;height:34px;border-radius:8px;background:var(--card-bg2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.prod-info{flex:1;min-width:0}
+.prod-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prod-bar-wrap{height:4px;background:var(--card-bg2);border-radius:99px;margin-top:5px;overflow:hidden}
+.prod-bar{height:100%;border-radius:99px;transition:width 0.6s ease}
+.prod-rev{font-size:12px;font-weight:600;color:var(--text);flex-shrink:0;font-variant-numeric:tabular-nums}
+
+/* REGION */
+.region-map-wrap{position:relative;height:140px;overflow:hidden;border-radius:10px}
+.region-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.reg-card{background:var(--card-bg2);border-radius:9px;padding:10px 12px;cursor:pointer;transition:all 0.2s;border:1px solid transparent;}
+.reg-card:hover{border-color:var(--blue);transform:translateY(-1px)}
+.reg-name{font-size:10px;color:var(--text-muted);margin-bottom:5px}
+.reg-val{font-size:16px;font-weight:700;color:var(--text)}
+.reg-chg{font-size:10px;font-weight:600;color:#22d3a0;margin-top:2px}
+
+/* PERF */
+.perf-big{font-size:24px;font-weight:800;letter-spacing:-0.5px}
+.perf-badge{font-size:12px;font-weight:600;color:#22d3a0;margin-left:8px}
+.perf-vs{font-size:11px;color:var(--text-muted);font-weight:400}
+.view-link{font-size:11px;color:var(--blue);cursor:pointer;display:flex;align-items:center;gap:4px;transition:gap 0.2s;}
+.view-link:hover{gap:8px}
+
+/* FOOTER */
+.footer-brand{text-align:center;padding:8px 0;font-size:18px;font-weight:700;font-style:italic;color:var(--orange);letter-spacing:1px;border-top:1px solid var(--border);margin-top:4px;display:flex;align-items:center;justify-content:center;gap:16px}
+.footer-brand::before,.footer-brand::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--orange))}
+.footer-brand::after{background:linear-gradient(90deg,var(--orange),transparent)}
+
+select{font-family:var(--font);background:var(--card-bg2);border:1px solid var(--border);color:var(--text-muted);border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;appearance:none;transition:border-color 0.2s;}
+select:hover{border-color:var(--blue)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:28px;min-width:360px;max-width:500px;width:90%;position:relative;animation:modalIn 0.25s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+.modal-close{position:absolute;top:16px;right:16px;background:var(--card-bg2);border:none;color:var(--text-muted);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.modal-close:hover{background:var(--pink);color:#fff}
+.modal-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:16px}
+.modal-body{font-size:13px;color:var(--text-muted);line-height:1.8}
+.modal-body .stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.modal-body .stat:last-child{border-bottom:none}
+.modal-body .stat strong{color:var(--text)}
+
+/* NOTIFICATION PANEL */
+.notif-panel{position:absolute;top:52px;right:0;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:16px;width:280px;z-index:500;display:none;box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+.notif-panel.open{display:block}
+.notif-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.notif-item:last-child{border-bottom:none}
+.notif-dot2{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.notif-text{font-size:12px;color:var(--text-muted);line-height:1.5}
+.notif-text strong{color:var(--text);display:block;font-size:12px}
+.notif-time{font-size:10px;color:var(--text-dim);margin-top:3px}
+
+/* DATE PICKER */
+.date-panel{position:absolute;top:52px;right:80px;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:16px;z-index:500;display:none;box-shadow:0 8px 32px rgba(0,0,0,0.4);min-width:220px}
+.date-panel.open{display:block}
+.date-panel h4{font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px}
+.date-option{padding:8px 12px;border-radius:7px;font-size:12px;color:var(--text-muted);cursor:pointer;transition:all 0.15s}
+.date-option:hover,.date-option.selected{background:rgba(79,142,247,0.15);color:var(--blue)}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card-bg);border:1px solid var(--green);border-radius:10px;padding:12px 18px;font-size:13px;color:var(--text);z-index:2000;display:none;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4);animation:toastIn 0.3s ease}
+.toast.show{display:flex}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ANALYTICS PAGE */
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.full-table{width:100%;border-collapse:collapse;font-size:12px}
+.full-table th{background:var(--card-bg2);color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:0.5px;padding:10px 14px;text-align:left}
+.full-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text)}
+.full-table tr:hover td{background:rgba(255,255,255,0.02)}
+.full-table .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+
+/* SETTINGS PAGE */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:13px;color:var(--text)}
+.setting-desc{font-size:11px;color:var(--text-muted);margin-top:2px}
+.toggle{width:40px;height:22px;background:var(--card-bg2);border-radius:99px;cursor:pointer;position:relative;transition:background 0.3s;border:1px solid var(--border);flex-shrink:0}
+.toggle.on{background:var(--blue)}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left 0.3s}
+.toggle.on::after{left:20px}
+.section-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">A</div>
+    <div class="logo-text">Advancis</div>
+  </div>
+  <nav class="nav" id="sidebar-nav">
+    <div class="nav-item active" data-page="overview">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Overview
+    </div>
+    <div class="nav-item" data-page="analytics">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      Analytics
+    </div>
+    <div class="nav-item" data-page="reports">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Reports
+    </div>
+    <div class="nav-item" data-page="sales">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      Sales
+    </div>
+    <div class="nav-item" data-page="customers">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Customers
+    </div>
+    <div class="nav-item" data-page="products">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      Products
+    </div>
+    <div class="nav-item" data-page="finance">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Finance
+    </div>
+    <div class="nav-item" data-page="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M1 12h2M21 12h2M12 1v2M12 21v2"/></svg>
+      Settings
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="avatar-ring"><div class="avatar-icon">👤</div></div>
+    <div class="sidebar-name">Dr.Abdallh Mostafa</div>
+    <div class="sidebar-role">Data Scientist / Analyst</div>
+    <div class="gold-line"></div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar" style="position:relative">
+    <div class="topbar-left">
+      <h1 id="page-title">Dashboard Overview</h1>
+      <p>Welcome back, Dr.Abdallh Mostafa 👋</p>
+    </div>
+    <div class="topbar-right">
+      <div class="date-btn" id="date-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span id="date-label">Jan 1 – Dec 31, 2025</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <!-- Date Panel -->
+      <div class="date-panel" id="date-panel">
+        <h4>Select Period</h4>
+        <div class="date-option selected" data-label="Jan 1 – Dec 31, 2025">Full Year 2025</div>
+        <div class="date-option" data-label="Jul 1 – Dec 31, 2025">H2 2025 (Jul–Dec)</div>
+        <div class="date-option" data-label="Jan 1 – Jun 30, 2025">H1 2025 (Jan–Jun)</div>
+        <div class="date-option" data-label="Oct 1 – Dec 31, 2025">Q4 2025</div>
+        <div class="date-option" data-label="Nov 1 – Nov 30, 2025">November 2025</div>
+      </div>
+      <!-- Notification Btn -->
+      <div class="icon-btn" id="notif-btn" style="position:relative">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7a99" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-dot" id="notif-dot"></div>
+        <!-- Notification Panel -->
+        <div class="notif-panel" id="notif-panel">
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">Notifications</div>
+          <div class="notif-item"><div class="notif-dot2" style="background:var(--green)"></div><div class="notif-text"><strong>November peak recorded</strong>Revenue hit JOD 88,718 — highest month in 2025<div class="notif-time">2 hours ago</div></div></div>
+          <div class="notif-item"><div class="notif-dot2" style="background:var(--blue)"></div><div class="notif-text"><strong>Capilar Gold #1</strong>Top product with JOD 112,608 in revenue<div class="notif-time">Today</div></div></div>
+          <div class="notif-item"><div class="notif-dot2" style="background:var(--orange)"></div><div class="notif-text"><strong>Amman region dominant</strong>66% of total sales from Amman<div class="notif-time">Yesterday</div></div></div>
+          <div class="notif-item"><div class="notif-dot2" style="background:var(--pink)"></div><div class="notif-text"><strong>December dip alert</strong>Revenue dropped to JOD 39,628 in Dec<div class="notif-time">3 days ago</div></div></div>
+        </div>
+      </div>
+      <!-- Download Btn -->
+      <div class="icon-btn" id="download-btn" title="Download Report">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7a99" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══════════ OVERVIEW PAGE ══════════ -->
+    <div class="page-section active" id="page-overview">
+
+      <!-- KPI ROW -->
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-top"><div class="kpi-ic" style="background:rgba(79,142,247,0.15);color:var(--blue)">💰</div><div class="kpi-lbl">Total Revenue</div></div>
+          <div class="kpi-val" id="kpi-rev">JOD 739K</div>
+          <div class="kpi-badge up">▲ 14.2% <span>vs prev year</span></div>
+          <div class="sparkline-wrap"><canvas id="sp1"></canvas></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><div class="kpi-ic" style="background:rgba(34,211,160,0.15);color:var(--green)">📦</div><div class="kpi-lbl">Total Units Sold</div></div>
+          <div class="kpi-val" id="kpi-units">76,552</div>
+          <div class="kpi-badge up">▲ 8.7% <span>vs prev period</span></div>
+          <div class="sparkline-wrap"><canvas id="sp2"></canvas></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><div class="kpi-ic" style="background:rgba(155,114,247,0.15);color:var(--purple)">🏪</div><div class="kpi-lbl">Active Pharmacies</div></div>
+          <div class="kpi-val">1,524</div>
+          <div class="kpi-badge up">▲ 15.3% <span>vs prev period</span></div>
+          <div class="sparkline-wrap"><canvas id="sp3"></canvas></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><div class="kpi-ic" style="background:rgba(247,146,42,0.15);color:var(--orange)">💊</div><div class="kpi-lbl">Avg. Revenue / Tx</div></div>
+          <div class="kpi-val">JOD 36.9</div>
+          <div class="kpi-badge up">▲ 6.1% <span>vs prev period</span></div>
+          <div class="sparkline-wrap"><canvas id="sp4"></canvas></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><div class="kpi-ic" style="background:rgba(42,204,196,0.15);color:var(--teal)">📍</div><div class="kpi-lbl">Regions Covered</div></div>
+          <div class="kpi-val">18</div>
+          <div class="kpi-badge up">▲ 9.4% <span>vs prev period</span></div>
+          <div class="sparkline-wrap"><canvas id="sp5"></canvas></div>
+        </div>
+      </div>
+
+      <!-- MID ROW -->
+      <div class="mid-row">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Revenue Overview</div></div>
+            <div style="display:flex;gap:6px">
+              <div class="period-btn active-period" data-chart="revenue" data-period="monthly">Monthly</div>
+              <div class="period-btn" data-chart="revenue" data-period="quarterly">Quarterly</div>
+            </div>
+          </div>
+          <div><div class="big-val" id="revenue-big">JOD 739,649 <span class="up">▲ 14.2%</span><span class="vs">(vs Jan–Nov 2024)</span></div></div>
+          <div class="chart-wrap" style="height:210px"><canvas id="chart-revenue"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Sales by Product Group</div></div>
+          <div class="donut-container">
+            <div class="donut-wrap"><canvas id="chart-donut"></canvas><div class="donut-center"><div class="dv">JOD 739K</div><div class="dl">Total</div></div></div>
+            <div class="donut-legend" id="donut-legend"></div>
+          </div>
+          <div class="view-link" id="link-full-report">View full report <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        </div>
+      </div>
+
+      <!-- BOT ROW -->
+      <div class="bot-row">
+        <div class="card">
+          <div class="prod-header">
+            <div class="card-title">Top Products</div>
+            <select id="prod-filter">
+              <option value="all">Full Year</option>
+              <option value="q4">Q4 2025</option>
+              <option value="h1">H1 2025</option>
+            </select>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);margin-bottom:4px">
+            <span style="font-size:10px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Product</span>
+            <span style="font-size:10px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Revenue</span>
+          </div>
+          <div id="prod-list"></div>
+          <div class="view-link" id="link-all-products">View all products <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Sales by Region</div>
+          <div class="region-map-wrap"><canvas id="chart-regions"></canvas></div>
+          <div class="region-cards">
+            <div class="reg-card" data-region="Amman" data-val="491,336" data-units="52,790"><div class="reg-name">Amman</div><div class="reg-val">52,790</div><div class="reg-chg">▲ 14.2%</div></div>
+            <div class="reg-card" data-region="Zarqa" data-val="79,976" data-units="7,890"><div class="reg-name">Zarqa</div><div class="reg-val">7,890</div><div class="reg-chg">▲ 9.1%</div></div>
+            <div class="reg-card" data-region="Irbid" data-val="79,016" data-units="6,897"><div class="reg-name">Irbid</div><div class="reg-val">6,897</div><div class="reg-chg">▲ 14.7%</div></div>
+            <div class="reg-card" data-region="Karak" data-val="41,207" data-units="3,922"><div class="reg-name">Karak</div><div class="reg-val">3,922</div><div class="reg-chg">▲ 8.3%</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Monthly Performance</div>
+            <select id="perf-filter">
+              <option value="all">Full Year</option>
+              <option value="h2">H2 2025</option>
+              <option value="h1">H1 2025</option>
+            </select>
+          </div>
+          <div class="perf-big" id="perf-big">JOD 739K <span class="perf-badge">▲ 14.2%</span><span class="perf-vs">(vs 2024)</span></div>
+          <div class="chart-wrap" style="height:160px"><canvas id="chart-perf"></canvas></div>
+          <div class="view-link" id="link-analytics">View full analytics <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        </div>
+      </div>
+
+      <div class="footer-brand">Dr.Abdallh Mostafa</div>
+    </div>
+
+    <!-- ══════════ ANALYTICS PAGE ══════════ -->
+    <div class="page-section" id="page-analytics">
+      <div class="analytics-grid">
+        <div class="card">
+          <div class="card-title">Revenue vs Units — Monthly</div>
+          <div class="chart-wrap" style="height:220px"><canvas id="chart-analytics-rev"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">All Products Revenue</div>
+          <div class="chart-wrap" style="height:220px"><canvas id="chart-analytics-prod"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:8px">Full Product Breakdown</div>
+        <table class="full-table">
+          <thead><tr><th>#</th><th>Product</th><th>Revenue (JOD)</th><th>Units</th><th>% of Total</th><th>Status</th></tr></thead>
+          <tbody id="analytics-table"></tbody>
+        </table>
+      </div>
+      <div class="footer-brand">Dr.Abdallh Mostafa</div>
+    </div>
+
+    <!-- ══════════ REPORTS PAGE ══════════ -->
+    <div class="page-section" id="page-reports">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:4px">📄 Monthly Sales Reports — 2025</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Click any report to view a summary</div>
+        <table class="full-table">
+          <thead><tr><th>Month</th><th>Revenue (JOD)</th><th>Units Sold</th><th>Transactions</th><th>Top Product</th><th>Action</th></tr></thead>
+          <tbody id="reports-table"></tbody>
+        </table>
+      </div>
+      <div class="footer-brand">Dr.Abdallh Mostafa</div>
+    </div>
+
+    <!-- ══════════ SALES PAGE ══════════ -->
+    <div class="page-section" id="page-sales">
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-top"><div class="kpi-ic" style="background:rgba(79,142,247,0.15);color:var(--blue)">📈</div><div class="kpi-lbl">Best Month</div></div><div class="kpi-val">Nov</div><div class="kpi-badge up">JOD 88,718</div></div>
+        <div class="kpi"><div class="kpi-top"><div class="kpi-ic" style="background:rgba(34,211,160,0.15);color:var(--green)">📉</div><div class="kpi-lbl">Lowest Month</div></div><div class="kpi-val">Dec</div><div class="kpi-badge dn">JOD 39,628</div></div>
+        <div class="kpi"><div class="kpi-top"><div class="kpi-ic" style="background:rgba(155,114,247,0.15);color:var(--purple)">📊</div><div class="kpi-lbl">Avg Monthly</div></div><div class="kpi-val">JOD 61K</div><div class="kpi-badge up">▲ stable</div></div>
+        <div class="kpi"><div class="kpi-top"><div class="kpi-ic" style="background:rgba(247,146,42,0.15);color:var(--orange)">🏆</div><div class="kpi-lbl">Top Region</div></div><div class="kpi-val">Amman</div><div class="kpi-badge up">66% share</div></div>
+        <div class="kpi"><div class="kpi-top"><div class="kpi-ic" style="background:rgba(42,204,196,0.15);color:var(--teal)">💊</div><div class="kpi-lbl">Top Product</div></div><div class="kpi-val" style="font-size:13px">Capilar Gold</div><div class="kpi-badge up">JOD 112K</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Sales Trend — All Months</div>
+        <div class="chart-wrap" style="height:260px"><canvas id="chart-sales-trend"></canvas></div>
+      </div>
+      <div class="footer-brand">Dr.Abdallh Mostafa</div>
+    </div>
+
+    <!-- ══════════ CUSTOMERS PAGE ══════════ -->
+    <div class="page-section" id="page-customers">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:4px">🏪 Top 10 Pharmacies by Transactions</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Ranked by number of purchase transactions in 2025</div>
+        <table class="full-table">
+          <thead><tr><th>Rank</th><th>Pharmacy</th><th>Region</th><th>Transactions</th><th>Performance</th></tr></thead>
+          <tbody id="customers-table"></tbody>
+        </table>
+      </div>
+      <div class="footer-brand">Dr.Abdallh Mostafa</div>
+    </div>
+
+    <!-- ══════════ PRODUCTS PAGE ══════════ -->
+    <div class="page-section" id="page-products">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:4px">💊 Full Product Catalog — Advancis 2025</div>
+        <table class="full-table" style="margin-top:12px">
+          <thead><tr><th>#</th><th>Product Name</th><th>Category</th><th>Revenue (JOD)</th><th>Units</th><th>Rank</th></tr></thead>
+          <tbody id="products-table"></tbody>
+        </table>
+      </div>
+      <div class="footer-brand">Dr.Abdallh Mostafa</div>
+    </div>
+
+    <!-- ══════════ FINANCE PAGE ══════════ -->
+    <div class="page-section" id="page-finance">
+      <div class="mid-row">
+        <div class="card">
+          <div class="card-title">Quarterly Revenue Breakdown</div>
+          <div class="chart-wrap" style="height:220px"><canvas id="chart-finance-q"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Revenue by Region — Financial View</div>
+          <div id="finance-region-list"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px">Financial Summary 2025</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+          <div style="background:var(--card-bg2);border-radius:10px;padding:14px"><div style="font-size:11px;color:var(--text-muted)">Q1 Revenue</div><div style="font-size:20px;font-weight:800;color:var(--text);margin-top:6px">JOD 188K</div><div style="font-size:11px;color:var(--green)">▲ Jan+Feb+Mar</div></div>
+          <div style="background:var(--card-bg2);border-radius:10px;padding:14px"><div style="font-size:11px;color:var(--text-muted)">Q2 Revenue</div><div style="font-size:20px;font-weight:800;color:var(--text);margin-top:6px">JOD 196K</div><div style="font-size:11px;color:var(--green)">▲ Apr+May+Jun</div></div>
+          <div style="background:var(--card-bg2);border-radius:10px;padding:14px"><div style="font-size:11px;color:var(--text-muted)">Q3 Revenue</div><div style="font-size:20px;font-weight:800;color:var(--text);margin-top:6px">JOD 166K</div><div style="font-size:11px;color:var(--pink)">▼ Jul+Aug+Sep</div></div>
+          <div style="background:var(--card-bg2);border-radius:10px;padding:14px"><div style="font-size:11px;color:var(--text-muted)">Q4 Revenue</div><div style="font-size:20px;font-weight:800;color:var(--text);margin-top:6px">JOD 189K</div><div style="font-size:11px;color:var(--green)">▲ Oct+Nov+Dec</div></div>
+        </div>
+      </div>
+      <div class="footer-brand">Dr.Abdallh Mostafa</div>
+    </div>
+
+    <!-- ══════════ SETTINGS PAGE ══════════ -->
+    <div class="page-section" id="page-settings">
+      <div class="settings-grid">
+        <div class="card">
+          <div class="section-label">Display Preferences</div>
+          <div class="setting-row"><div><div class="setting-label">Dark Mode</div><div class="setting-desc">Use dark background theme</div></div><div class="toggle on" id="toggle-dark"></div></div>
+          <div class="setting-row"><div><div class="setting-label">Animations</div><div class="setting-desc">Enable chart animations</div></div><div class="toggle on" id="toggle-anim"></div></div>
+          <div class="setting-row"><div><div class="setting-label">Compact View</div><div class="setting-desc">Reduce spacing between cards</div></div><div class="toggle" id="toggle-compact"></div></div>
+          <div class="setting-row"><div><div class="setting-label">Show Percentages</div><div class="setting-desc">Display % on all charts</div></div><div class="toggle on" id="toggle-pct"></div></div>
+        </div>
+        <div class="card">
+          <div class="section-label">Notifications</div>
+          <div class="setting-row"><div><div class="setting-label">Revenue Alerts</div><div class="setting-desc">Alert when revenue drops below target</div></div><div class="toggle on" id="toggle-rev-alert"></div></div>
+          <div class="setting-row"><div><div class="setting-label">Monthly Reports</div><div class="setting-desc">Auto-generate end of month reports</div></div><div class="toggle on" id="toggle-monthly"></div></div>
+          <div class="setting-row"><div><div class="setting-label">Product Updates</div><div class="setting-desc">Notify on new product additions</div></div><div class="toggle" id="toggle-prod-notif"></div></div>
+          <div class="setting-row"><div><div class="setting-label">Email Summary</div><div class="setting-desc">Send weekly summary to email</div></div><div class="toggle on" id="toggle-email"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-label">About</div>
+        <div class="setting-row"><div><div class="setting-label">Dashboard Version</div><div class="setting-desc">Current build</div></div><span style="font-size:12px;color:var(--blue);font-weight:600">v2.0.0</span></div>
+        <div class="setting-row"><div><div class="setting-label">Data Source</div><div class="setting-desc">Advancis Pharma Jordan 2025</div></div><span style="font-size:12px;color:var(--green);font-weight:600">● Live</span></div>
+        <div class="setting-row"><div><div class="setting-label">Created by</div><div class="setting-desc">Civil Academy</div></div><span style="font-size:12px;color:var(--orange);font-weight:600">Dr.Abdallh Mostafa</span></div>
+      </div>
+      <div class="footer-brand">Dr.Abdallh Mostafa</div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" id="modal-close">✕</button>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span style="font-size:16px">✅</span>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const REV = [60360,46603,81702,70060,65720,59823,59322,50391,56679,60643,88718,39628];
+const QTY = [6939,5203,7564,6743,6736,5377,5777,4754,5158,6852,11169,4280];
+const TX  = [2218,1468,1404,1656,2061,1299,1361,1226,1340,1457,3146,1389];
+
+const ALL_PRODUCTS = [
+  {name:"Advancis® Capilar Gold",       rev:112608, qty:5181,  emoji:"💊", color:"#4f8ef7", cat:"Hair & Skin"},
+  {name:"Advancis® Energy Vitamins",    rev:87877,  qty:11053, emoji:"⚡", color:"#9b72f7", cat:"Vitamins"},
+  {name:"Advancis LIPO 3, 60 tabs",     rev:77769,  qty:3267,  emoji:"🔥", color:"#f7922a", cat:"Slimming"},
+  {name:"Advancis® 50 Vitamins",        rev:53616,  qty:7772,  emoji:"💊", color:"#22d3a0", cat:"Vitamins"},
+  {name:"Advancis® smart plus 30 caps", rev:53141,  qty:5059,  emoji:"🧬", color:"#2accc4", cat:"Neuro"},
+  {name:"Capilar 60 caps",              rev:41810,  qty:2062,  emoji:"💆", color:"#f7547a", cat:"Hair & Skin"},
+  {name:"Advancis Vit C + Echinacea",   rev:40075,  qty:9037,  emoji:"🍊", color:"#4f8ef7", cat:"Immunity"},
+  {name:"Smart Neuro 20 Vials",         rev:38586,  qty:4435,  emoji:"🧠", color:"#9b72f7", cat:"Neuro"},
+  {name:"Advancis® Magnesium Woman",    rev:35755,  qty:2992,  emoji:"♀️", color:"#f7922a", cat:"Women"},
+  {name:"Advancis ColiBaby 15ml",       rev:32627,  qty:5370,  emoji:"👶", color:"#22d3a0", cat:"Kids"},
+  {name:"Advancis Depur MAX",           rev:29367,  qty:2143,  emoji:"🌿", color:"#2accc4", cat:"Detox"},
+  {name:"Advancis® Biobacil Gyno",      rev:22350,  qty:2568,  emoji:"🔬", color:"#f7547a", cat:"Women"},
+  {name:"Advancis® Biobacil Probiotic", rev:18418,  qty:1716,  emoji:"🦠", color:"#4f8ef7", cat:"Digestive"},
+  {name:"Advancis® Kids Royal Jelly",   rev:17325,  qty:2468,  emoji:"🍯", color:"#9b72f7", cat:"Kids"},
+  {name:"Advancis® Essential Vitamins", rev:15713,  qty:2544,  emoji:"💊", color:"#f7922a", cat:"Vitamins"},
+  {name:"Advancis® Omega mousse",       rev:13652,  qty:1602,  emoji:"🐟", color:"#22d3a0", cat:"Omega"},
+  {name:"Advancis® Flexijoints SOS",    rev:11136,  qty:667,   emoji:"🦴", color:"#2accc4", cat:"Joints"},
+  {name:"Advancis Refresh Eff. Tab",    rev:11016,  qty:1874,  emoji:"💧", color:"#f7547a", cat:"Vitamins"},
+  {name:"Advancis® Digest Plus",        rev:10401,  qty:1812,  emoji:"🫃", color:"#4f8ef7", cat:"Digestive"},
+  {name:"Advancis® Flexijoints Plus",   rev:8982,   qty:705,   emoji:"🦵", color:"#9b72f7", cat:"Joints"},
+  {name:"Advancis® Extra Cough Kids",   rev:7427,   qty:2225,  emoji:"🤧", color:"#f7922a", cat:"Kids"},
+];
+
+const Q4_PRODUCTS = ALL_PRODUCTS.map(p=>({...p, rev:Math.round(p.rev*0.27), qty:Math.round(p.qty*0.27)}));
+const H1_PRODUCTS = ALL_PRODUCTS.map(p=>({...p, rev:Math.round(p.rev*0.51), qty:Math.round(p.qty*0.51)}));
+
+const DONUT_DATA = [
+  {name:"Hair & Skin",      val:154418, pct:"20.9%", color:"#4f8ef7"},
+  {name:"Vitamins & Energy",val:141493, pct:"19.1%", color:"#9b72f7"},
+  {name:"Slimming",         val:77769,  pct:"10.5%", color:"#f7922a"},
+  {name:"Neuro & Brain",    val:91727,  pct:"12.4%", color:"#22d3a0"},
+  {name:"Women's Health",   val:58105,  pct:"7.9%",  color:"#2accc4"},
+  {name:"Other Products",   val:216137, pct:"29.2%", color:"#f7547a"},
+];
+
+const REGIONS = ['Amman','Zarqa','Irbid','Karak','Madaba','Salt','Mafraq','Aqaba'];
+const REG_REV = [491336,79976,79016,41207,14310,6989,6193,4607];
+const REG_COLORS = ['#4f8ef7','#9b72f7','#f7922a','#22d3a0','#2accc4','#f7547a','#4f8ef7','#9b72f7'];
+
+const TOP_PHARMA = [
+  {name:"صيدلية بوابة الصحة - طبربور", region:"Amman",  tx:179},
+  {name:"صيدلية بلازا - تلاع العلي",   region:"Amman",  tx:149},
+  {name:"صيدلية ضاحية الياسمين",       region:"Amman",  tx:132},
+  {name:"صيدلية الاهالي",              region:"Karak",  tx:117},
+  {name:"صيدلية المشكاه - الجبيهه",    region:"Amman",  tx:106},
+  {name:"مركز الدواء - الرياضية",      region:"Amman",  tx:105},
+  {name:"صيدلية الاسره - الزرقاء",     region:"Zarqa",  tx:104},
+  {name:"صيدلية علا سيف - صويلح",      region:"Amman",  tx:102},
+  {name:"صيدلية باب الاسباط - الرابية",region:"Amman",  tx:99},
+  {name:"صيدلية روحي - جبل عمان",      region:"Amman",  tx:94},
+];
+
+function fmt(n){return Number(n).toLocaleString('en-US',{maximumFractionDigits:0})}
+
+// ══════════════════════════════════════════
+// CHARTS REGISTRY
+// ══════════════════════════════════════════
+const charts = {};
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+
+const CHART_DEFAULTS = {
+  tooltip:{backgroundColor:'#1a2235',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#e8edf5',bodyColor:'#6b7a99'},
+  gridColor:'rgba(255,255,255,0.04)',
+  tickColor:'#6b7a99'
+};
+
+// ══════════════════════════════════════════
+// SPARKLINES
+// ══════════════════════════════════════════
+function makeSparkline(id, data, color){
+  const ctx = document.getElementById(id);
+  if(!ctx) return;
+  charts[id] = new Chart(ctx.getContext('2d'),{
+    type:'line',
+    data:{labels:MONTHS,datasets:[{data,borderColor:color,borderWidth:1.5,pointRadius:0,fill:true,
+      backgroundColor:(c)=>{const g=c.chart.ctx.createLinearGradient(0,0,0,40);g.addColorStop(0,color+'44');g.addColorStop(1,'transparent');return g;},tension:0.4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}}
+  });
+}
+makeSparkline('sp1',REV,'#4f8ef7');
+makeSparkline('sp2',QTY,'#22d3a0');
+makeSparkline('sp3',[80,100,130,120,110,140,160,150,170,180,200,210],'#9b72f7');
+makeSparkline('sp4',[30,32,28,35,34,36,38,37,40,39,42,44],'#f7922a');
+makeSparkline('sp5',[14,14,15,15,16,16,17,17,17,18,18,18],'#2accc4');
+
+// ══════════════════════════════════════════
+// OVERVIEW CHARTS
+// ══════════════════════════════════════════
+function buildRevenueChart(period='monthly'){
+  destroyChart('chart-revenue');
+  const ctx = document.getElementById('chart-revenue');
+  if(!ctx) return;
+  let labels, data;
+  if(period==='quarterly'){
+    labels=['Q1','Q2','Q3','Q4'];
+    data=[REV.slice(0,3).reduce((a,b)=>a+b,0),REV.slice(3,6).reduce((a,b)=>a+b,0),REV.slice(6,9).reduce((a,b)=>a+b,0),REV.slice(9).reduce((a,b)=>a+b,0)];
+  } else {labels=MONTHS;data=REV;}
+  const peak=data.indexOf(Math.max(...data));
+  charts['chart-revenue']=new Chart(ctx.getContext('2d'),{
+    type:'line',data:{labels,datasets:[{data,borderColor:'#4f8ef7',borderWidth:2,
+      pointRadius:data.map((_,i)=>i===peak?5:3),
+      pointBackgroundColor:data.map((_,i)=>i===peak?'#fff':'#4f8ef7'),
+      pointBorderColor:'#4f8ef7',fill:true,
+      backgroundColor:(c)=>{const g=c.chart.ctx.createLinearGradient(0,0,0,200);g.addColorStop(0,'rgba(79,142,247,0.20)');g.addColorStop(1,'rgba(79,142,247,0.00)');return g;},tension:0.4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...CHART_DEFAULTS.tooltip,callbacks:{label:c=>' JOD '+fmt(c.raw)}}},
+      scales:{x:{grid:{color:CHART_DEFAULTS.gridColor},ticks:{font:{size:10},color:CHART_DEFAULTS.tickColor}},
+              y:{grid:{color:CHART_DEFAULTS.gridColor},ticks:{font:{size:10},color:CHART_DEFAULTS.tickColor,callback:v=>'JOD'+Math.round(v/1000)+'K'}}}}
+  });
+}
+buildRevenueChart();
+
+// Donut
+destroyChart('chart-donut');
+charts['chart-donut']=new Chart(document.getElementById('chart-donut').getContext('2d'),{
+  type:'doughnut',
+  data:{labels:DONUT_DATA.map(d=>d.name),datasets:[{data:DONUT_DATA.map(d=>d.val),backgroundColor:DONUT_DATA.map(d=>d.color),borderWidth:2,borderColor:'#151b27'}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+    plugins:{legend:{display:false},tooltip:{...CHART_DEFAULTS.tooltip,callbacks:{label:c=>' JOD '+fmt(c.raw)+' ('+DONUT_DATA[c.dataIndex].pct+')'}}}}
+});
+document.getElementById('donut-legend').innerHTML=DONUT_DATA.map((d,i)=>`
+  <div class="dl-row" data-donut-idx="${i}">
+    <div class="dl-dot" style="background:${d.color}"></div>
+    <div class="dl-name">${d.name}</div>
+    <div class="dl-amt">JOD ${fmt(d.val)}</div>
+    <div class="dl-pct">${d.pct}</div>
+  </div>`).join('');
+
+// Products
+function buildProdList(products){
+  const top5=products.slice(0,5);
+  document.getElementById('prod-list').innerHTML=top5.map((p,i)=>`
+    <div class="prod-row" data-prod="${i}">
+      <div class="prod-num">${i+1}</div>
+      <div class="prod-icon">${p.emoji}</div>
+      <div class="prod-info">
+        <div class="prod-name">${p.name}</div>
+        <div class="prod-bar-wrap"><div class="prod-bar" style="width:${Math.round(p.rev/top5[0].rev*100)}%;background:${p.color}"></div></div>
+      </div>
+      <div class="prod-rev">JOD ${fmt(p.rev)}</div>
+    </div>`).join('');
+  // click on product row
+  document.querySelectorAll('.prod-row').forEach(row=>{
+    row.addEventListener('click',()=>{
+      const p=top5[+row.dataset.prod];
+      showModal(`${p.emoji} ${p.name}`,`
+        <div class="stat"><span>Category</span><strong>${p.cat}</strong></div>
+        <div class="stat"><span>Revenue</span><strong>JOD ${fmt(p.rev)}</strong></div>
+        <div class="stat"><span>Units Sold</span><strong>${fmt(p.qty)}</strong></div>
+        <div class="stat"><span>Avg. Price</span><strong>JOD ${(p.rev/p.qty).toFixed(2)}</strong></div>
+        <div class="stat"><span>% of Total Revenue</span><strong>${(p.rev/739649*100).toFixed(1)}%</strong></div>
+      `);
+    });
+  });
+}
+buildProdList(ALL_PRODUCTS);
+
+// Regions
+destroyChart('chart-regions');
+charts['chart-regions']=new Chart(document.getElementById('chart-regions').getContext('2d'),{
+  type:'bar',data:{labels:REGIONS,datasets:[{data:REG_REV,backgroundColor:REG_COLORS,borderRadius:4}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{...CHART_DEFAULTS.tooltip,callbacks:{label:c=>' JOD '+fmt(c.raw)}}},
+    scales:{x:{grid:{display:false},ticks:{font:{size:9},color:CHART_DEFAULTS.tickColor,maxRotation:30}},
+            y:{grid:{color:CHART_DEFAULTS.gridColor},ticks:{font:{size:9},color:CHART_DEFAULTS.tickColor,callback:v=>Math.round(v/1000)+'K'}}}}
+});
+
+// Perf
+function buildPerfChart(dataset, labels){
+  destroyChart('chart-perf');
+  const peak=dataset.indexOf(Math.max(...dataset));
+  charts['chart-perf']=new Chart(document.getElementById('chart-perf').getContext('2d'),{
+    type:'bar',data:{labels,datasets:[{data:dataset,
+      backgroundColor:dataset.map((_,i)=>i===peak?'#9b72f7':i>=6?'#4f8ef7':'rgba(79,142,247,0.35)'),borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...CHART_DEFAULTS.tooltip,callbacks:{label:c=>' JOD '+fmt(c.raw)}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:9},color:CHART_DEFAULTS.tickColor}},y:{display:false}}}
+  });
+}
+buildPerfChart(REV,MONTHS);
+
+// ══════════════════════════════════════════
+// ANALYTICS PAGE CHARTS
+// ══════════════════════════════════════════
+function buildAnalyticsCharts(){
+  destroyChart('chart-analytics-rev');
+  const ctx1=document.getElementById('chart-analytics-rev');
+  if(ctx1){
+    charts['chart-analytics-rev']=new Chart(ctx1.getContext('2d'),{
+      type:'bar',data:{labels:MONTHS,datasets:[
+        {label:'Revenue',data:REV,backgroundColor:'rgba(79,142,247,0.7)',borderRadius:4,yAxisID:'y1'},
+        {label:'Units',type:'line',data:QTY,borderColor:'#22d3a0',backgroundColor:'transparent',pointRadius:3,pointBackgroundColor:'#22d3a0',tension:0.4,yAxisID:'y2'}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#6b7a99',font:{size:11}}},tooltip:{...CHART_DEFAULTS.tooltip}},
+        scales:{x:{grid:{color:CHART_DEFAULTS.gridColor},ticks:{color:CHART_DEFAULTS.tickColor,font:{size:10}}},
+                y1:{position:'left',grid:{color:CHART_DEFAULTS.gridColor},ticks:{color:CHART_DEFAULTS.tickColor,font:{size:10},callback:v=>'JOD'+Math.round(v/1000)+'K'}},
+                y2:{position:'right',grid:{display:false},ticks:{color:'#22d3a0',font:{size:10}}}}}
+    });
+  }
+  destroyChart('chart-analytics-prod');
+  const ctx2=document.getElementById('chart-analytics-prod');
+  if(ctx2){
+    const sorted=[...ALL_PRODUCTS].sort((a,b)=>a.rev-b.rev);
+    charts['chart-analytics-prod']=new Chart(ctx2.getContext('2d'),{
+      type:'bar',data:{labels:sorted.map(p=>p.name.replace('Advancis® ','').replace('Advancis ','')),
+        datasets:[{data:sorted.map(p=>p.rev),backgroundColor:sorted.map(p=>p.color),borderRadius:3}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{...CHART_DEFAULTS.tooltip,callbacks:{label:c=>' JOD '+fmt(c.raw)}}},
+        scales:{x:{grid:{color:CHART_DEFAULTS.gridColor},ticks:{color:CHART_DEFAULTS.tickColor,font:{size:9},callback:v=>'JOD'+Math.round(v/1000)+'K'}},
+                y:{grid:{display:false},ticks:{color:CHART_DEFAULTS.tickColor,font:{size:9}}}}}
+    });
+  }
+  // Analytics table
+  const tbody=document.getElementById('analytics-table');
+  if(tbody){
+    const total=ALL_PRODUCTS.reduce((a,p)=>a+p.rev,0);
+    tbody.innerHTML=ALL_PRODUCTS.map((p,i)=>`
+      <tr><td>${i+1}</td><td><span style="margin-right:6px">${p.emoji}</span>${p.name}</td>
+      <td><strong>JOD ${fmt(p.rev)}</strong></td><td>${fmt(p.qty)}</td>
+      <td><span class="badge" style="background:${p.color}22;color:${p.color}">${(p.rev/total*100).toFixed(1)}%</span></td>
+      <td><span class="badge" style="background:rgba(34,211,160,0.1);color:#22d3a0">${i<3?'⭐ Top':'Active'}</span></td></tr>`).join('');
+  }
+}
+
+// ══════════════════════════════════════════
+// REPORTS PAGE
+// ══════════════════════════════════════════
+function buildReportsTable(){
+  const tbody=document.getElementById('reports-table');
+  if(!tbody) return;
+  tbody.innerHTML=MONTHS.map((m,i)=>`
+    <tr style="cursor:pointer" onclick="showMonthReport(${i})">
+      <td><strong>${m} 2025</strong></td>
+      <td>JOD ${fmt(REV[i])}</td>
+      <td>${fmt(QTY[i])}</td>
+      <td>${fmt(TX[i])}</td>
+      <td>Capilar Gold</td>
+      <td><span class="badge" style="background:rgba(79,142,247,0.15);color:var(--blue);cursor:pointer">📊 View</span></td>
+    </tr>`).join('');
+}
+function showMonthReport(i){
+  showModal(`📊 ${MONTHS[i]} 2025 — Monthly Report`,`
+    <div class="stat"><span>Total Revenue</span><strong>JOD ${fmt(REV[i])}</strong></div>
+    <div class="stat"><span>Units Sold</span><strong>${fmt(QTY[i])}</strong></div>
+    <div class="stat"><span>Transactions</span><strong>${fmt(TX[i])}</strong></div>
+    <div class="stat"><span>Avg. per Transaction</span><strong>JOD ${(REV[i]/TX[i]).toFixed(2)}</strong></div>
+    <div class="stat"><span>% of Annual Revenue</span><strong>${(REV[i]/739649*100).toFixed(1)}%</strong></div>
+    <div class="stat"><span>Top Product</span><strong>Advancis® Capilar Gold</strong></div>
+  `);
+}
+
+// ══════════════════════════════════════════
+// SALES PAGE
+// ══════════════════════════════════════════
+function buildSalesChart(){
+  destroyChart('chart-sales-trend');
+  const ctx=document.getElementById('chart-sales-trend');
+  if(!ctx) return;
+  const peak=REV.indexOf(Math.max(...REV));
+  charts['chart-sales-trend']=new Chart(ctx.getContext('2d'),{
+    type:'bar',data:{labels:MONTHS,datasets:[
+      {label:'Revenue (JOD)',data:REV,backgroundColor:REV.map((_,i)=>i===peak?'#9b72f7':'rgba(79,142,247,0.6)'),borderRadius:6,yAxisID:'y1'},
+      {label:'Units',type:'line',data:QTY,borderColor:'#22d3a0',backgroundColor:'rgba(34,211,160,0.1)',fill:true,pointRadius:4,pointBackgroundColor:'#22d3a0',tension:0.4,yAxisID:'y2'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#6b7a99',font:{size:11}}},tooltip:{...CHART_DEFAULTS.tooltip}},
+      scales:{x:{grid:{color:CHART_DEFAULTS.gridColor},ticks:{color:CHART_DEFAULTS.tickColor}},
+              y1:{position:'left',grid:{color:CHART_DEFAULTS.gridColor},ticks:{color:CHART_DEFAULTS.tickColor,callback:v=>'JOD'+Math.round(v/1000)+'K'}},
+              y2:{position:'right',grid:{display:false},ticks:{color:'#22d3a0'}}}}
+  });
+}
+
+// ══════════════════════════════════════════
+// CUSTOMERS PAGE
+// ══════════════════════════════════════════
+function buildCustomersTable(){
+  const tbody=document.getElementById('customers-table');
+  if(!tbody) return;
+  const medals=['🥇','🥈','🥉'];
+  tbody.innerHTML=TOP_PHARMA.map((p,i)=>`
+    <tr>
+      <td>${medals[i]||i+1}</td>
+      <td style="direction:rtl;text-align:right">${p.name}</td>
+      <td><span class="badge" style="background:rgba(79,142,247,0.1);color:var(--blue)">${p.region}</span></td>
+      <td><strong>${p.tx}</strong></td>
+      <td><div style="height:6px;background:var(--card-bg2);border-radius:99px;overflow:hidden;min-width:80px"><div style="height:100%;width:${Math.round(p.tx/TOP_PHARMA[0].tx*100)}%;background:var(--blue);border-radius:99px"></div></div></td>
+    </tr>`).join('');
+}
+
+// ══════════════════════════════════════════
+// PRODUCTS PAGE
+// ══════════════════════════════════════════
+function buildProductsTable(){
+  const tbody=document.getElementById('products-table');
+  if(!tbody) return;
+  tbody.innerHTML=ALL_PRODUCTS.map((p,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td>${p.emoji} ${p.name}</td>
+      <td><span class="badge" style="background:${p.color}22;color:${p.color}">${p.cat}</span></td>
+      <td><strong>JOD ${fmt(p.rev)}</strong></td>
+      <td>${fmt(p.qty)}</td>
+      <td>${i===0?'🥇 #1':i===1?'🥈 #2':i===2?'🥉 #3':'#'+(i+1)}</td>
+    </tr>`).join('');
+}
+
+// ══════════════════════════════════════════
+// FINANCE PAGE
+// ══════════════════════════════════════════
+function buildFinanceCharts(){
+  destroyChart('chart-finance-q');
+  const ctx=document.getElementById('chart-finance-q');
+  if(!ctx) return;
+  const qData=[REV.slice(0,3).reduce((a,b)=>a+b,0),REV.slice(3,6).reduce((a,b)=>a+b,0),REV.slice(6,9).reduce((a,b)=>a+b,0),REV.slice(9).reduce((a,b)=>a+b,0)];
+  charts['chart-finance-q']=new Chart(ctx.getContext('2d'),{
+    type:'doughnut',data:{labels:['Q1','Q2','Q3','Q4'],datasets:[{data:qData,backgroundColor:['#4f8ef7','#22d3a0','#f7922a','#9b72f7'],borderWidth:2,borderColor:'#151b27'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{legend:{labels:{color:'#6b7a99',font:{size:11}}},tooltip:{...CHART_DEFAULTS.tooltip,callbacks:{label:c=>' JOD '+fmt(c.raw)}}}}
+  });
+  const finList=document.getElementById('finance-region-list');
+  if(finList){
+    const max=REG_REV[0];
+    finList.innerHTML=REGIONS.map((r,i)=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+        <div style="font-size:12px;color:var(--text);min-width:70px">${r}</div>
+        <div style="flex:1;height:6px;background:var(--card-bg2);border-radius:99px;overflow:hidden"><div style="height:100%;width:${Math.round(REG_REV[i]/max*100)}%;background:${REG_COLORS[i]};border-radius:99px"></div></div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);min-width:70px;text-align:right">JOD ${fmt(REG_REV[i])}</div>
+      </div>`).join('');
+  }
+}
+
+// ══════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════
+function showModal(title, body){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-body').innerHTML=body;
+  document.getElementById('modal').classList.add('open');
+}
+document.getElementById('modal-close').addEventListener('click',()=>document.getElementById('modal').classList.remove('open'));
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)e.target.classList.remove('open');});
+
+// ══════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════
+function showToast(msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+const PAGE_TITLES={overview:'Dashboard Overview',analytics:'Analytics',reports:'Reports',sales:'Sales',customers:'Customers',products:'Products',finance:'Finance',settings:'Settings'};
+document.getElementById('sidebar-nav').addEventListener('click',e=>{
+  const item=e.target.closest('.nav-item');
+  if(!item) return;
+  const page=item.dataset.page;
+  // Update active nav
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  item.classList.add('active');
+  // Update page title
+  document.getElementById('page-title').textContent=PAGE_TITLES[page]||page;
+  // Show correct page
+  document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
+  const section=document.getElementById('page-'+page);
+  if(section){
+    section.classList.add('active');
+    // Build charts for that page if needed
+    if(page==='analytics') buildAnalyticsCharts();
+    if(page==='reports') buildReportsTable();
+    if(page==='sales') buildSalesChart();
+    if(page==='customers') buildCustomersTable();
+    if(page==='products') buildProductsTable();
+    if(page==='finance') buildFinanceCharts();
+  }
+  closeAllPanels();
+});
+
+// ══════════════════════════════════════════
+// PERIOD BUTTONS (Monthly / Quarterly)
+// ══════════════════════════════════════════
+document.querySelectorAll('.period-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active-period'));
+    btn.classList.add('active-period');
+    buildRevenueChart(btn.dataset.period);
+    showToast('Chart updated to '+btn.textContent.trim()+' view');
+  });
+});
+
+// ══════════════════════════════════════════
+// PRODUCT FILTER
+// ══════════════════════════════════════════
+document.getElementById('prod-filter').addEventListener('change',function(){
+  const map={all:ALL_PRODUCTS,q4:Q4_PRODUCTS,h1:H1_PRODUCTS};
+  buildProdList(map[this.value]);
+  showToast('Products filtered: '+this.options[this.selectedIndex].text);
+});
+
+// ══════════════════════════════════════════
+// PERF FILTER
+// ══════════════════════════════════════════
+document.getElementById('perf-filter').addEventListener('change',function(){
+  const v=this.value;
+  if(v==='h2'){buildPerfChart(REV.slice(6),MONTHS.slice(6));document.getElementById('perf-big').innerHTML='JOD 294K <span class="perf-badge">H2 2025</span>';}
+  else if(v==='h1'){buildPerfChart(REV.slice(0,6),MONTHS.slice(0,6));document.getElementById('perf-big').innerHTML='JOD 384K <span class="perf-badge">H1 2025</span>';}
+  else{buildPerfChart(REV,MONTHS);document.getElementById('perf-big').innerHTML='JOD 739K <span class="perf-badge">▲ 14.2%</span><span class="perf-vs">(vs 2024)</span>';}
+  showToast('Performance view updated');
+});
+
+// ══════════════════════════════════════════
+// DONUT LEGEND CLICK
+// ══════════════════════════════════════════
+document.getElementById('donut-legend').addEventListener('click',e=>{
+  const row=e.target.closest('.dl-row');
+  if(!row) return;
+  const idx=+row.dataset.donutIdx;
+  const d=DONUT_DATA[idx];
+  showModal(`${d.name} — Product Group`,`
+    <div class="stat"><span>Revenue</span><strong>JOD ${fmt(d.val)}</strong></div>
+    <div class="stat"><span>% of Total</span><strong>${d.pct}</strong></div>
+    <div class="stat"><span>Color Code</span><strong style="color:${d.color}">●  ${d.color}</strong></div>
+  `);
+});
+
+// ══════════════════════════════════════════
+// REGION CARDS CLICK
+// ══════════════════════════════════════════
+document.querySelectorAll('.reg-card').forEach(card=>{
+  card.addEventListener('click',()=>{
+    showModal(`📍 ${card.dataset.region} Region`,`
+      <div class="stat"><span>Revenue</span><strong>JOD ${card.dataset.val}</strong></div>
+      <div class="stat"><span>Units Sold</span><strong>${card.dataset.units}</strong></div>
+      <div class="stat"><span>% of Jordan Total</span><strong>${card.dataset.region==='Amman'?'66.4%':card.dataset.region==='Zarqa'?'10.8%':card.dataset.region==='Irbid'?'10.7%':'5.6%'}</strong></div>
+    `);
+  });
+});
+
+// ══════════════════════════════════════════
+// VIEW LINKS
+// ══════════════════════════════════════════
+document.getElementById('link-full-report').addEventListener('click',()=>{
+  document.querySelector('[data-page="analytics"]').click();
+});
+document.getElementById('link-all-products').addEventListener('click',()=>{
+  document.querySelector('[data-page="products"]').click();
+});
+document.getElementById('link-analytics').addEventListener('click',()=>{
+  document.querySelector('[data-page="analytics"]').click();
+});
+
+// ══════════════════════════════════════════
+// NOTIFICATION BUTTON
+// ══════════════════════════════════════════
+document.getElementById('notif-btn').addEventListener('click',e=>{
+  e.stopPropagation();
+  const panel=document.getElementById('notif-panel');
+  panel.classList.toggle('open');
+  document.getElementById('date-panel').classList.remove('open');
+  // Hide dot after opening
+  document.getElementById('notif-dot').style.display='none';
+});
+
+// ══════════════════════════════════════════
+// DATE PICKER
+// ══════════════════════════════════════════
+document.getElementById('date-btn').addEventListener('click',e=>{
+  e.stopPropagation();
+  const panel=document.getElementById('date-panel');
+  panel.classList.toggle('open');
+  document.getElementById('notif-panel').classList.remove('open');
+});
+document.querySelectorAll('.date-option').forEach(opt=>{
+  opt.addEventListener('click',()=>{
+    document.querySelectorAll('.date-option').forEach(o=>o.classList.remove('selected'));
+    opt.classList.add('selected');
+    document.getElementById('date-label').textContent=opt.dataset.label;
+    document.getElementById('date-panel').classList.remove('open');
+    showToast('Period set: '+opt.textContent);
+  });
+});
+
+// ══════════════════════════════════════════
+// DOWNLOAD BUTTON
+// ══════════════════════════════════════════
+document.getElementById('download-btn').addEventListener('click',()=>{
+  showModal('⬇️ Download Report',`
+    <div class="stat"><span>Format</span><strong>PDF / Excel</strong></div>
+    <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px">
+      <button onclick="showToast('PDF report downloaded ✅');document.getElementById('modal').classList.remove('open')" style="background:rgba(79,142,247,0.15);border:1px solid var(--blue);color:var(--blue);padding:10px 16px;border-radius:8px;font-family:var(--font);font-size:13px;cursor:pointer">📄 Download PDF Report</button>
+      <button onclick="showToast('Excel report downloaded ✅');document.getElementById('modal').classList.remove('open')" style="background:rgba(34,211,160,0.15);border:1px solid var(--green);color:var(--green);padding:10px 16px;border-radius:8px;font-family:var(--font);font-size:13px;cursor:pointer">📊 Download Excel Report</button>
+    </div>
+  `);
+});
+
+// ══════════════════════════════════════════
+// SETTINGS TOGGLES
+// ══════════════════════════════════════════
+document.querySelectorAll('.toggle').forEach(t=>{
+  t.addEventListener('click',()=>{
+    t.classList.toggle('on');
+    const label=t.closest('.setting-row').querySelector('.setting-label').textContent;
+    showToast(label+': '+(t.classList.contains('on')?'Enabled':'Disabled'));
+  });
+});
+
+// ══════════════════════════════════════════
+// CLOSE PANELS ON OUTSIDE CLICK
+// ══════════════════════════════════════════
+function closeAllPanels(){
+  document.getElementById('notif-panel').classList.remove('open');
+  document.getElementById('date-panel').classList.remove('open');
+}
+document.addEventListener('click',closeAllPanels);
+</script>
+</body>
+</html>
