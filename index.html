@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advancis Dashboard — Dr. Abdallh Mostafa</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0d1117;--bg2:#161b22;--bg3:#1c2128;--bg4:#21262d;
+--border:#30363d;--border2:#484f58;
+--text:#e6edf3;--text2:#8b949e;--text3:#6e7681;
+--gold:#d4a843;--gold2:#f0c060;--gold3:#a07828;
+--blue:#58a6ff;--green:#3fb950;--red:#f85149;--purple:#bc8cff;--orange:#e3b341;
+--teal:#39d0d8;--pink:#ff79c6;
+--radius:10px;--radius2:16px;
+}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;direction:rtl}
+#sidebar{width:230px;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:width 0.3s ease;overflow:hidden;z-index:100}
+#sidebar.collapsed{width:66px}
+#sidebar.collapsed .nav-text,#sidebar.collapsed .logo-text,#sidebar.collapsed .nav-label,#sidebar.collapsed .user-info{display:none}
+.sidebar-logo{display:flex;align-items:center;gap:12px;padding:18px 16px;border-bottom:1px solid var(--border);height:64px}
+.logo-circle{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold3));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#000;flex-shrink:0}
+.logo-text{font-weight:700;font-size:15px;color:var(--gold);white-space:nowrap}
+.toggle-btn{background:none;border:1px solid var(--border);color:var(--text2);border-radius:8px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:10px auto;transition:all 0.2s;flex-shrink:0}
+.toggle-btn:hover{border-color:var(--gold);color:var(--gold)}
+.toggle-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.nav-section{flex:1;overflow-y:auto;padding:8px 0}
+.nav-section::-webkit-scrollbar{width:3px}
+.nav-section::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.nav-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:12px 18px 4px;white-space:nowrap}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;border-radius:8px;margin:2px 8px;transition:all 0.2s;white-space:nowrap;position:relative;border:1px solid transparent}
+.nav-item:hover{background:var(--bg3)}
+.nav-item.active{background:rgba(212,168,67,0.12);color:var(--gold);border-color:rgba(212,168,67,0.2)}
+.nav-item.active::after{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--gold);border-radius:2px}
+.nav-icon{width:20px;height:20px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-text{font-size:13px;font-weight:500}
+.sidebar-footer{border-top:1px solid var(--border);padding:14px 16px}
+.user-card{display:flex;align-items:center;gap:10px}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;color:#fff}
+.user-name{font-size:12px;font-weight:600;white-space:nowrap}
+.user-role{font-size:10px;color:var(--text3)}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#topbar{height:64px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0}
+.page-title{font-size:17px;font-weight:700}
+.page-sub{font-size:12px;color:var(--text3)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-date{font-size:12px;color:var(--text2);background:var(--bg3);padding:6px 14px;border-radius:20px;border:1px solid var(--border)}
+.icon-btn{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:all 0.2s}
+.icon-btn:hover{border-color:var(--gold)}
+.icon-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8}
+.notif-dot{position:absolute;top:5px;right:5px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid var(--bg2)}
+#content{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px}
+#content::-webkit-scrollbar{width:5px}
+#content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.page{display:none;flex-direction:column;gap:20px}
+.page.active{display:flex}
+.filters-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:16px 20px}
+.filter-group{display:flex;flex-direction:column;gap:5px}
+.filter-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
+.filter-select{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:13px;font-family:'Cairo',sans-serif;cursor:pointer;min-width:150px;transition:all 0.2s}
+.filter-select:focus{border-color:var(--gold);outline:none}
+.filter-actions{display:flex;gap:8px;margin-top:18px}
+.btn{border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Cairo',sans-serif;transition:all 0.2s;border:1px solid var(--border)}
+.btn-gold{background:var(--gold);color:#000;border-color:var(--gold)}
+.btn-gold:hover{background:var(--gold2)}
+.btn-ghost{background:transparent;color:var(--text2)}
+.btn-ghost:hover{border-color:var(--red);color:var(--red)}
+.btn-outline{background:transparent;color:var(--text2)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:18px 20px;position:relative;overflow:hidden;transition:all 0.2s}
+.kpi-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.kpi-card::before{content:'';position:absolute;top:0;right:0;width:3px;height:100%}
+.kpi-card.c-gold::before{background:var(--gold)}
+.kpi-card.c-blue::before{background:var(--blue)}
+.kpi-card.c-green::before{background:var(--green)}
+.kpi-card.c-purple::before{background:var(--purple)}
+.kpi-card.c-teal::before{background:var(--teal)}
+.kpi-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+.kpi-value{font-size:24px;font-weight:800;line-height:1;margin-bottom:6px}
+.kpi-value.c-gold{color:var(--gold)}
+.kpi-value.c-blue{color:var(--blue)}
+.kpi-value.c-green{color:var(--green)}
+.kpi-value.c-purple{color:var(--purple)}
+.kpi-value.c-teal{color:var(--teal)}
+.kpi-sub{font-size:11px;color:var(--text3)}
+.kpi-badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:6px}
+.badge-up{background:rgba(63,185,80,0.15);color:var(--green)}
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+.charts-row-eq{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:20px}
+.chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.chart-title{font-size:14px;font-weight:700}
+.chart-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.chart-tabs{display:flex;gap:4px}
+.chart-tab{background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Cairo',sans-serif;transition:all 0.2s}
+.chart-tab.active{background:rgba(212,168,67,0.15);border-color:var(--gold);color:var(--gold)}
+.cw{position:relative;width:100%;height:260px}
+.cw-tall{position:relative;width:100%;height:340px}
+.cw-short{position:relative;width:100%;height:190px}
+.prog-list{display:flex;flex-direction:column;gap:12px}
+.prog-item{display:flex;flex-direction:column;gap:5px}
+.prog-header{display:flex;justify-content:space-between;align-items:center}
+.prog-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.prog-val{font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap}
+.prog-bar-wrap{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.prog-bar{height:100%;border-radius:3px;transition:width 0.8s ease}
+.table-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:20px}
+.table-scroll{max-height:360px;overflow-y:auto}
+.table-scroll::-webkit-scrollbar{width:4px}
+.table-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--bg3);padding:10px 14px;text-align:right;font-weight:600;color:var(--text2);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;position:sticky;top:0;z-index:1}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.15s}
+tbody tr:hover{background:var(--bg3)}
+tbody td{padding:10px 14px;white-space:nowrap}
+.td-name{max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.rk{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--bg3);font-size:11px;font-weight:700}
+.rk1{background:rgba(212,168,67,0.2);color:var(--gold)}
+.rk2{background:rgba(88,166,255,0.2);color:var(--blue)}
+.rk3{background:rgba(63,185,80,0.2);color:var(--green)}
+.gt{color:var(--gold)}
+.bt{color:var(--blue)}
+.grt{color:var(--green)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.summary-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:20px;text-align:center}
+.summary-big{font-size:28px;font-weight:800;margin:8px 0}
+.summary-lbl{font-size:12px;color:var(--text3)}
+.dashboard-footer{background:var(--bg2);border-top:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.footer-l{font-size:12px;color:var(--text3)}
+.footer-b{font-size:13px;font-weight:700;color:var(--gold)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--bg3);border:1px solid var(--gold);color:var(--text);padding:10px 24px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;transition:transform 0.3s ease;pointer-events:none}
+#toast.show{transform:translateX(-50%) translateY(0)}
+@media(max-width:900px){.charts-row,.charts-row-eq{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(2,1fr)}.summary-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-circle">A</div>
+    <span class="logo-text">Advancis</span>
+  </div>
+  <button class="toggle-btn" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+  </button>
+  <div class="nav-section">
+    <div class="nav-label">الرئيسية</div>
+    <div class="nav-item active" onclick="goTo('dashboard',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="nav-text">لوحة التحكم</span>
+    </div>
+    <div class="nav-item" onclick="goTo('analytics',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span class="nav-text">التحليلات</span>
+    </div>
+    <div class="nav-label">المبيعات</div>
+    <div class="nav-item" onclick="goTo('products',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+      <span class="nav-text">المنتجات</span>
+    </div>
+    <div class="nav-item" onclick="goTo('regions',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 00-8 8c0 5.4 7.05 12.25 7.35 12.53a1 1 0 001.3 0C13 22.25 20 15.4 20 10a8 8 0 00-8-8z"/></svg>
+      <span class="nav-text">المناطق</span>
+    </div>
+    <div class="nav-item" onclick="goTo('pharmacies',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="nav-text">الصيدليات</span>
+    </div>
+    <div class="nav-label">التقارير</div>
+    <div class="nav-item" onclick="goTo('reports',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span class="nav-text">التقارير</span>
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">AM</div>
+      <div class="user-info">
+        <div class="user-name">Dr. Abdallh Mostafa</div>
+        <div class="user-role">Data Analyst</div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div id="main">
+  <header id="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">لوحة التحكم الرئيسية</div>
+      <div class="page-sub">Advancis Pharma Jordan — 2025</div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-date" id="topbarDate"></div>
+      <div class="icon-btn" onclick="showToast('تم تحديث البيانات ✓')">
+        <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      </div>
+      <div class="icon-btn" onclick="showToast('لا توجد إشعارات جديدة')">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-dot"></span>
+      </div>
+    </div>
+  </header>
+
+  <div id="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="filters-bar">
+        <div class="filter-group">
+          <div class="filter-label">الشهر</div>
+          <select class="filter-select" id="fMonth">
+            <option value="all">كل الأشهر</option>
+            <option value="0">يناير</option><option value="1">فبراير</option>
+            <option value="2">مارس</option><option value="3">أبريل</option>
+            <option value="4">مايو</option><option value="5">يونيو</option>
+            <option value="6">يوليو</option><option value="7">أغسطس</option>
+            <option value="8">سبتمبر</option><option value="9">أكتوبر</option>
+            <option value="10">نوفمبر</option><option value="11">ديسمبر</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">المنطقة</div>
+          <select class="filter-select" id="fRegion">
+            <option value="all">كل المناطق</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <div class="filter-label">المنتج</div>
+          <select class="filter-select" id="fProduct">
+            <option value="all">كل المنتجات</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-ghost" onclick="resetFilters()">↺ إعادة ضبط</button>
+          <button class="btn btn-gold" onclick="applyFilters()">تطبيق الفلاتر</button>
+        </div>
+      </div>
+
+      <div class="kpi-grid" id="kpiGrid"></div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">الإيراد الشهري</div>
+              <div class="chart-sub" id="revSub">يناير – ديسمبر 2025</div>
+            </div>
+            <div class="chart-tabs">
+              <button class="chart-tab active" onclick="switchRev('revenue',this)">إيراد</button>
+              <button class="chart-tab" onclick="switchRev('units',this)">وحدات</button>
+              <button class="chart-tab" onclick="switchRev('tx',this)">معاملات</button>
+            </div>
+          </div>
+          <div class="cw"><canvas id="revenueChart" role="img" aria-label="الإيراد الشهري">الإيراد الشهري 2025</canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">توزيع المنتجات</div>
+              <div class="chart-sub">حسب الإيراد</div>
+            </div>
+          </div>
+          <div class="cw-short"><canvas id="donutChart" role="img" aria-label="توزيع المنتجات">توزيع المنتجات</canvas></div>
+          <div class="legend" id="donutLegend"></div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">أفضل المنتجات</div>
+            <div class="chart-tabs">
+              <button class="chart-tab active" onclick="switchTop('revenue',this)">إيراد</button>
+              <button class="chart-tab" onclick="switchTop('units',this)">وحدات</button>
+            </div>
+          </div>
+          <div class="prog-list" id="topProducts"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">المبيعات حسب المنطقة</div>
+            <div class="chart-sub">أفضل 8 مناطق</div>
+          </div>
+          <div class="cw"><canvas id="regionChart" role="img" aria-label="المبيعات حسب المنطقة">المناطق</canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="page" id="page-analytics">
+      <div class="charts-row-eq">
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">الأداء الشهري — إيراد ووحدات</div></div>
+          <div class="cw-tall"><canvas id="anaMonthly" role="img" aria-label="الأداء الشهري">الأداء الشهري</canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">متوسط قيمة المعاملة</div>
+              <div class="chart-sub">JOD لكل فاتورة شهرياً</div>
+            </div>
+          </div>
+          <div class="cw-tall"><canvas id="anaAvg" role="img" aria-label="متوسط المعاملة">متوسط المعاملة</canvas></div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><div class="chart-title">مقارنة أداء المنتجات — إيراد ووحدات</div></div>
+        <div style="position:relative;width:100%;height:360px"><canvas id="anaProducts" role="img" aria-label="مقارنة المنتجات">مقارنة المنتجات</canvas></div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="page" id="page-products">
+      <div class="table-card">
+        <div class="chart-header">
+          <div class="chart-title">جميع المنتجات — 21 منتج</div>
+          <button class="btn btn-outline" onclick="exportCSV('products')">⬇ تصدير CSV</button>
+        </div>
+        <div class="table-scroll"><div class="tw">
+          <table><thead><tr><th>#</th><th>المنتج</th><th>الإيراد (JOD)</th><th>الوحدات</th><th>متوسط السعر</th><th>% من الإجمالي</th></tr></thead>
+          <tbody id="productsTbody"></tbody></table>
+        </div></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><div class="chart-title">مقارنة إيراد المنتجات</div></div>
+        <div style="position:relative;width:100%;height:420px"><canvas id="prodBarChart" role="img" aria-label="مقارنة المنتجات">المنتجات</canvas></div>
+      </div>
+    </div>
+
+    <!-- REGIONS -->
+    <div class="page" id="page-regions">
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">الإيراد حسب المحافظة — 18 منطقة</div></div>
+          <div style="position:relative;width:100%;height:400px"><canvas id="regHBar" role="img" aria-label="الإيراد حسب المحافظة">المحافظات</canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">أفضل مناطق عمّان</div>
+              <div class="chart-sub">المناطق الفرعية</div>
+            </div>
+          </div>
+          <div class="prog-list" id="subAreaList"></div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="chart-header">
+          <div class="chart-title">جميع المناطق</div>
+          <button class="btn btn-outline" onclick="exportCSV('regions')">⬇ تصدير CSV</button>
+        </div>
+        <div class="tw"><table><thead><tr><th>#</th><th>المنطقة</th><th>الإيراد (JOD)</th><th>الوحدات</th><th>الصيدليات</th><th>% من الإجمالي</th></tr></thead>
+        <tbody id="regionsTbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- PHARMACIES -->
+    <div class="page" id="page-pharmacies">
+      <div class="summary-grid">
+        <div class="summary-box"><div class="summary-lbl">إجمالي الصيدليات النشطة</div><div class="summary-big gt">1,524</div><div class="summary-lbl">في 18 محافظة</div></div>
+        <div class="summary-box"><div class="summary-lbl">متوسط إيراد الصيدلية</div><div class="summary-big bt">JOD 485</div><div class="summary-lbl">طوال عام 2025</div></div>
+        <div class="summary-box"><div class="summary-lbl">أعلى صيدلية إيراداً</div><div class="summary-big grt">JOD 56,816</div><div class="summary-lbl">صيدلية الرازي — اربد</div></div>
+      </div>
+      <div class="table-card">
+        <div class="chart-header">
+          <div class="chart-title">أفضل 15 صيدلية من حيث الإيراد</div>
+          <button class="btn btn-outline" onclick="exportCSV('pharmacies')">⬇ تصدير CSV</button>
+        </div>
+        <div class="tw"><table><thead><tr><th>#</th><th>اسم الصيدلية</th><th>الإيراد (JOD)</th><th>% من الإجمالي</th></tr></thead>
+        <tbody id="pharmTbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="page" id="page-reports">
+      <div class="kpi-grid">
+        <div class="kpi-card c-gold"><div class="kpi-label">أفضل شهر</div><div class="kpi-value c-gold">نوفمبر</div><div class="kpi-sub">JOD 88,718</div></div>
+        <div class="kpi-card c-blue"><div class="kpi-label">أفضل منتج</div><div class="kpi-value c-blue" style="font-size:15px">Capilar Gold</div><div class="kpi-sub">JOD 112,608</div></div>
+        <div class="kpi-card c-green"><div class="kpi-label">أكبر منطقة</div><div class="kpi-value c-green">عمّان</div><div class="kpi-sub">66.4% من الإيراد</div></div>
+        <div class="kpi-card c-purple"><div class="kpi-label">أفضل صيدلية</div><div class="kpi-value c-purple" style="font-size:13px">الرازي — اربد</div><div class="kpi-sub">JOD 56,816</div></div>
+        <div class="kpi-card c-teal"><div class="kpi-label">أدنى شهر</div><div class="kpi-value c-teal">ديسمبر</div><div class="kpi-sub">JOD 39,628</div></div>
+        <div class="kpi-card c-gold"><div class="kpi-label">إجمالي 2025</div><div class="kpi-value c-gold">739K</div><div class="kpi-sub">JOD — 20,025 معاملة</div></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">ملخص الأداء السنوي 2025</div>
+          <button class="btn btn-gold" onclick="showToast('جاري تحضير التقرير... ✓')">⬇ تنزيل التقرير</button>
+        </div>
+        <div class="cw-tall"><canvas id="reportChart" role="img" aria-label="الأداء السنوي">الأداء السنوي</canvas></div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="dashboard-footer">
+    <div class="footer-l">Advancis Pharma Jordan • 2025 • 20,025 معاملة • 18 منطقة • 21 منتج</div>
+    <div class="footer-b">Dr. Abdallh Mostafa — Data Analyst</div>
+  </footer>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const COLORS=['#d4a843','#58a6ff','#3fb950','#bc8cff','#e3b341','#39d0d8','#ff79c6','#f85149','#79c0ff','#56d364','#ffa657','#d2a8ff'];
+const DATA={
+  monthly:{
+    labels:['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],
+    revenue:[60360,46603,81702,70060,65720,59823,59322,50391,56679,60643,88718,39628],
+    units:[6939,5203,7564,6743,6736,5377,5777,4754,5158,6852,11169,4280],
+    tx:[2218,1468,1404,1656,2061,1299,1361,1226,1340,1457,3146,1389]
+  },
+  products:[
+    {name:'Capilar Gold',revenue:112608,units:5181},
+    {name:'Energy Vitamins',revenue:87877,units:11053},
+    {name:'LIPO 3 60tabs',revenue:77769,units:3267},
+    {name:'50 Vitamins',revenue:53616,units:7772},
+    {name:'Smart Plus 30caps',revenue:53141,units:5059},
+    {name:'Capilar 60caps',revenue:41810,units:2062},
+    {name:'Vit C+Echinacea',revenue:40075,units:9037},
+    {name:'Smart Neuro 20V',revenue:38586,units:4435},
+    {name:'Magnesium Woman',revenue:35755,units:2992},
+    {name:'ColiBaby 15ml',revenue:32627,units:5370},
+    {name:'Depur MAX',revenue:29367,units:2143},
+    {name:'Biobacil Gyno',revenue:22350,units:2568},
+    {name:'Biobacil Prob.',revenue:18418,units:1716},
+    {name:'Kids Royal Jelly',revenue:17325,units:2468},
+    {name:'Essential Vit.',revenue:15713,units:2544},
+    {name:'Omega Mousse',revenue:13652,units:1602},
+    {name:'Flexijoints SOS',revenue:11136,units:667},
+    {name:'Refresh 12 Eff.',revenue:11016,units:1874},
+    {name:'Digest Plus',revenue:10401,units:1812},
+    {name:'Flexijoints Plus',revenue:8982,units:705},
+    {name:'Extra Cough Kids',revenue:7427,units:2225}
+  ],
+  regions:[
+    {name:'عمان',revenue:491336,units:52790,pharmacies:976},
+    {name:'الزرقاء',revenue:79976,units:7890,pharmacies:161},
+    {name:'اربد',revenue:79016,units:6897,pharmacies:101},
+    {name:'الكرك',revenue:41207,units:3922,pharmacies:39},
+    {name:'مادبا',revenue:14310,units:1578,pharmacies:39},
+    {name:'الفحيص وماحص',revenue:9193,units:907,pharmacies:22},
+    {name:'السلط',revenue:6989,units:670,pharmacies:58},
+    {name:'المفرق',revenue:6193,units:693,pharmacies:36},
+    {name:'العقبة',revenue:4607,units:439,pharmacies:15},
+    {name:'سحاب',revenue:2689,units:303,pharmacies:11},
+    {name:'الرمثا',revenue:2100,units:210,pharmacies:12},
+    {name:'الطفيلة',revenue:950,units:95,pharmacies:5},
+    {name:'عجلون',revenue:820,units:82,pharmacies:8},
+    {name:'جرش',revenue:650,units:65,pharmacies:6},
+    {name:'معان',revenue:430,units:43,pharmacies:4},
+    {name:'الشونة',revenue:310,units:31,pharmacies:3},
+    {name:'وادي الاردن',revenue:220,units:22,pharmacies:2},
+    {name:'وادي موسى',revenue:148,units:14,pharmacies:2}
+  ],
+  pharmacies:[
+    {name:'صيدلية الرازي المركزية — اربد',revenue:56816},
+    {name:'صيدلية الأسرة — الزرقاء الجديدة',revenue:31406},
+    {name:'صيدلية 911 — الشميساني',revenue:24886},
+    {name:'صيدلية روحي — جبل عمان',revenue:24165},
+    {name:'أدوية ترويج علمي',revenue:20221},
+    {name:'صيدلية باب القصر — الكرك',revenue:15492},
+    {name:'صيدلية صندوق الدواء — تلاع العلي',revenue:13769},
+    {name:'صيدلية مركز الدواء — المدينة الرياضية',revenue:12016},
+    {name:'مستودع ادوية الجنوب — الكرك',revenue:12012},
+    {name:'صيدلية عالم الصحة — عمان',revenue:8742},
+    {name:'صيدلية عبهري — الرصيفة',revenue:8122},
+    {name:'صيدلية دانا',revenue:8104},
+    {name:'صيدلية سر الدواء — اربد',revenue:7860},
+    {name:'صيدلية الهدف — عمان',revenue:7393},
+    {name:'صيدلية النسائم — مرج الحمام',revenue:7233}
+  ],
+  subAreas:[
+    {name:'الشميساني',revenue:49699},{name:'مرج الحمام وناعور',revenue:44995},
+    {name:'البيادر',revenue:42084},{name:'جبل عمان',revenue:34836},
+    {name:'تلاع العلي',revenue:29076},{name:'عبدون',revenue:26980},
+    {name:'الإدارة',revenue:23786},{name:'الجاردنز وخلدا',revenue:22272},
+    {name:'طبربور',revenue:20204},{name:'أم السماق',revenue:16102}
+  ]
+};
+
+let revMode='revenue',topMode='revenue';
+let revChart,donutChart,regChart;
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const now=new Date();
+  document.getElementById('topbarDate').textContent=now.toLocaleDateString('ar-JO',{year:'numeric',month:'long',day:'numeric'});
+  DATA.regions.forEach(r=>document.getElementById('fRegion').insertAdjacentHTML('beforeend',`<option value="${r.name}">${r.name}</option>`));
+  DATA.products.forEach(p=>document.getElementById('fProduct').insertAdjacentHTML('beforeend',`<option value="${p.name}">${p.name}</option>`));
+  buildDashboard();
+  buildAnalytics();
+  buildProductsPage();
+  buildRegionsPage();
+  buildPharmaciesPage();
+  buildReportsPage();
+});
+
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed')}
+
+const pageTitles={dashboard:'لوحة التحكم الرئيسية',analytics:'التحليلات',products:'المنتجات',regions:'المناطق',pharmacies:'الصيدليات',reports:'التقارير'};
+function goTo(id,el){
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('pageTitle').textContent=pageTitles[id]||id;
+  document.getElementById('content').scrollTop=0;
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function applyFilters(){
+  const m=document.getElementById('fMonth').value;
+  const r=document.getElementById('fRegion').value;
+  const p=document.getElementById('fProduct').value;
+  buildDashboard(m,r,p);
+  showToast('تم تطبيق الفلاتر ✓');
+}
+function resetFilters(){
+  document.getElementById('fMonth').value='all';
+  document.getElementById('fRegion').value='all';
+  document.getElementById('fProduct').value='all';
+  buildDashboard('all','all','all');
+  showToast('تم إعادة الضبط ✓');
+}
+
+function buildDashboard(m='all',r='all',p='all'){
+  const months=m==='all'?[0,1,2,3,4,5,6,7,8,9,10,11]:[parseInt(m)];
+  let revenue=months.reduce((s,i)=>s+DATA.monthly.revenue[i],0);
+  let units=months.reduce((s,i)=>s+DATA.monthly.units[i],0);
+  let tx=months.reduce((s,i)=>s+DATA.monthly.tx[i],0);
+  let pharmacies=1524;
+
+  if(r!=='all'){const reg=DATA.regions.find(x=>x.name===r);if(reg){const f=reg.revenue/739649;revenue=Math.round(revenue*f);units=Math.round(units*f);pharmacies=reg.pharmacies;}}
+  if(p!=='all'){const prod=DATA.products.find(x=>x.name===p);if(prod){const f=prod.revenue/739649;revenue=Math.round(revenue*f);units=prod.units;}}
+
+  buildKPIs(revenue,units,tx,pharmacies,m,r,p);
+  buildRevChart(months);
+  buildDonut(r,p);
+  buildTopProds();
+  buildRegionChart(r);
+}
+
+function buildKPIs(rev,units,tx,pharma,m,r,p){
+  const avg=(rev/Math.max(1,tx)).toFixed(1);
+  const kpis=[
+    {lbl:'إجمالي الإيراد',val:`JOD ${fmt(rev)}`,sub:'لعام 2025',badge:'+14.2%',c:'c-gold'},
+    {lbl:'الوحدات المباعة',val:fmt(units),sub:'وحدة مبيعة',badge:'+8.7%',c:'c-blue'},
+    {lbl:'الصيدليات النشطة',val:fmt(pharma),sub:'صيدلية نشطة',badge:'+15.3%',c:'c-green'},
+    {lbl:'المعاملات',val:fmt(tx),sub:'فاتورة',badge:'+6.1%',c:'c-purple'},
+    {lbl:'متوسط المعاملة',val:`JOD ${avg}`,sub:'لكل فاتورة',badge:'+3.2%',c:'c-teal'},
+    {lbl:'المناطق',val:r!=='all'?'1':'18',sub:'محافظة',badge:r!=='all'?r:'مكتمل',c:'c-gold'}
+  ];
+  document.getElementById('kpiGrid').innerHTML=kpis.map(k=>`
+    <div class="kpi-card ${k.c}">
+      <div class="kpi-label">${k.lbl}</div>
+      <div class="kpi-value ${k.c}">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+      <div class="kpi-badge badge-up">▲ ${k.badge}</div>
+    </div>`).join('');
+}
+
+function buildRevChart(months){
+  const labels=months.map(i=>DATA.monthly.labels[i]);
+  const map={revenue:{data:months.map(i=>DATA.monthly.revenue[i]),color:'#d4a843',lbl:'الإيراد (JOD)'},
+             units:{data:months.map(i=>DATA.monthly.units[i]),color:'#58a6ff',lbl:'الوحدات'},
+             tx:{data:months.map(i=>DATA.monthly.tx[i]),color:'#3fb950',lbl:'المعاملات'}};
+  const {data,color,lbl}=map[revMode];
+  if(revChart)revChart.destroy();
+  revChart=new Chart(document.getElementById('revenueChart'),{
+    type:'line',
+    data:{labels,datasets:[{label:lbl,data,borderColor:color,backgroundColor:color+'22',borderWidth:2.5,fill:true,tension:0.4,pointBackgroundColor:color,pointRadius:4,pointHoverRadius:7}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${revMode==='revenue'?'JOD ':''} ${fmt(ctx.parsed.y)}`}}},
+      scales:{x:{grid:{color:'#21262d'},ticks:{color:'#8b949e',font:{family:'Cairo',size:11}}},
+              y:{grid:{color:'#21262d'},ticks:{color:'#8b949e',font:{family:'Cairo',size:11},callback:v=>`${Math.round(v/1000)}K`}}}}
+  });
+}
+
+function buildDonut(r,p){
+  const prods=DATA.products.slice(0,6);
+  const rest=DATA.products.slice(6).reduce((s,x)=>s+x.revenue,0);
+  const labels=[...prods.map(x=>x.name),'أخرى'];
+  const vals=[...prods.map(x=>x.revenue),rest];
+  const colors=COLORS.slice(0,7);
+  if(donutChart)donutChart.destroy();
+  donutChart=new Chart(document.getElementById('donutChart'),{
+    type:'doughnut',
+    data:{labels,datasets:[{data:vals,backgroundColor:colors,borderColor:'#161b22',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: JOD ${fmt(ctx.parsed)}`}}}}
+  });
+  document.getElementById('donutLegend').innerHTML=labels.map((l,i)=>`<div class="legend-item"><div class="legend-dot" style="background:${colors[i]}"></div>${l}</div>`).join('');
+}
+
+function buildTopProds(){
+  const sorted=[...DATA.products].sort((a,b)=>b[topMode]-a[topMode]);
+  const max=sorted[0][topMode];
+  document.getElementById('topProducts').innerHTML=sorted.slice(0,7).map((p,i)=>`
+    <div class="prog-item">
+      <div class="prog-header">
+        <span class="prog-name">${p.name}</span>
+        <span class="prog-val">${topMode==='revenue'?'JOD '+fmt(p.revenue):fmt(p.units)+' وحدة'}</span>
+      </div>
+      <div class="prog-bar-wrap"><div class="prog-bar" style="width:${Math.round(p[topMode]/max*100)}%;background:${COLORS[i]}"></div></div>
+    </div>`).join('');
+}
+
+function buildRegionChart(filterReg){
+  const regions=filterReg!=='all'?DATA.regions.filter(r=>r.name===filterReg):DATA.regions.slice(0,8);
+  if(regChart)regChart.destroy();
+  regChart=new Chart(document.getElementById('regionChart'),{
+    type:'bar',
+    data:{labels:regions.map(r=>r.name),datasets:[{label:'الإيراد (JOD)',data:regions.map(r=>r.revenue),backgroundColor:COLORS.slice(0,regions.length),borderRadius:6,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`JOD ${fmt(ctx.parsed.y)}`}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#8b949e',font:{family:'Cairo',size:10},maxRotation:25}},
+              y:{grid:{color:'#21262d'},ticks:{color:'#8b949e',font:{family:'Cairo',size:10},callback:v=>`${Math.round(v/1000)}K`}}}}
+  });
+}
+
+function switchRev(mode,el){
+  revMode=mode;
+  el.parentElement.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const m=document.getElementById('fMonth').value;
+  const months=m==='all'?[0,1,2,3,4,5,6,7,8,9,10,11]:[parseInt(m)];
+  buildRevChart(months);
+}
+function switchTop(mode,el){
+  topMode=mode;
+  el.parentElement.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  buildTopProds();
+}
+
+function buildAnalytics(){
+  new Chart(document.getElementById('anaMonthly'),{
+    type:'bar',
+    data:{labels:DATA.monthly.labels,datasets:[
+      {label:'الإيراد (JOD)',data:DATA.monthly.revenue,backgroundColor:'#d4a843bb',borderRadius:4,yAxisID:'y'},
+      {label:'الوحدات',data:DATA.monthly.units,type:'line',borderColor:'#58a6ff',backgroundColor:'transparent',borderWidth:2,pointRadius:3,yAxisID:'y2'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#8b949e',font:{family:'Cairo',size:11}}}},
+      scales:{x:{grid:{color:'#21262d'},ticks:{color:'#8b949e',font:{family:'Cairo',size:10}}},
+              y:{grid:{color:'#21262d'},ticks:{color:'#d4a843',font:{family:'Cairo',size:10},callback:v=>`${Math.round(v/1000)}K`},position:'right'},
+              y2:{grid:{display:false},ticks:{color:'#58a6ff',font:{family:'Cairo',size:10}},position:'left'}}}
+  });
+  const avgTx=DATA.monthly.revenue.map((r,i)=>+(r/DATA.monthly.tx[i]).toFixed(1));
+  new Chart(document.getElementById('anaAvg'),{
+    type:'line',
+    data:{labels:DATA.monthly.labels,datasets:[{label:'متوسط قيمة المعاملة (JOD)',data:avgTx,borderColor:'#3fb950',backgroundColor:'#3fb95022',fill:true,tension:0.4,borderWidth:2.5,pointBackgroundColor:'#3fb950',pointRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'#21262d'},ticks:{color:'#8b949e',font:{family:'Cairo',size:10}}},
+              y:{grid:{color:'#21262d'},ticks:{color:'#8b949e',font:{family:'Cairo',size:10},callback:v=>`JOD ${v}`}}}}
+  });
+  const top10=DATA.products.slice(0,10);
+  new Chart(document.getElementById('anaProducts'),{
+    type:'bar',
+    data:{labels:top10.map(p=>p.name),datasets:[
+      {label:'الإيراد (JOD)',data:top10.map(p=>p.revenue),backgroundColor:'#d4a843bb',borderRadius:4},
+      {label:'الوحدات',data:top10.map(p=>p.units),backgroundColor:'#58a6ffbb',borderRadius:4}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#8b949e',font:{family:'Cairo',size:11}}}},
+      scales:{x:{grid:{color:'#21262d'},ticks:{color:'#8b949e',font:{family:'Cairo',size:9},maxRotation:30}},
+              y:{grid:{color:'#21262d'},ticks:{color:'#8b949e',font:{family:'Cairo',size:10},callback:v=>`${Math.round(v/1000)}K`}}}}
+  });
+}
+
+function buildProductsPage(){
+  const total=DATA.products.reduce((s,p)=>s+p.revenue,0);
+  document.getElementById('productsTbody').innerHTML=DATA.products.map((p,i)=>`
+    <tr><td><span class="rk ${i<3?'rk'+(i+1):''}">${i+1}</span></td>
+    <td class="td-name">${p.name}</td>
+    <td class="gt">${fmt(p.revenue)}</td>
+    <td>${fmt(p.units)}</td>
+    <td>${(p.revenue/p.units).toFixed(2)}</td>
+    <td class="bt">${(p.revenue/total*100).toFixed(1)}%</td></tr>`).join('');
+  new Chart(document.getElementById('prodBarChart'),{
+    type:'bar',
+    data:{labels:DATA.products.map(p=>p.name),datasets:[{label:'الإيراد (JOD)',data:DATA.products.map(p=>p.revenue),backgroundColor:DATA.products.map((_,i)=>COLORS[i%COLORS.length]),borderRadius:4,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`JOD ${fmt(ctx.parsed.x)}`}}},
+      scales:{x:{grid:{color:'#21262d'},ticks:{color:'#8b949e',font:{family:'Cairo',size:10},callback:v=>`${Math.round(v/1000)}K`}},
+              y:{grid:{display:false},ticks:{color:'#8b949e',font:{family:'Cairo',size:10}}}}}
+  });
+}
+
+function buildRegionsPage(){
+  new Chart(document.getElementById('regHBar'),{
+    type:'bar',
+    data:{labels:DATA.regions.map(r=>r.name),datasets:[{label:'الإيراد (JOD)',data:DATA.regions.map(r=>r.revenue),backgroundColor:DATA.regions.map((_,i)=>COLORS[i%COLORS.length]),borderRadius:4,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`JOD ${fmt(ctx.parsed.x)}`}}},
+      scales:{x:{grid:{color:'#21262d'},ticks:{color:'#8b949e',font:{family:'Cairo',size:10},callback:v=>`${Math.round(v/1000)}K`}},
+              y:{grid:{display:false},ticks:{color:'#8b949e',font:{family:'Cairo',size:10}}}}}
+  });
+  const maxS=DATA.subAreas[0].revenue;
+  document.getElementById('subAreaList').innerHTML=DATA.subAreas.map((s,i)=>`
+    <div class="prog-item">
+      <div class="prog-header"><span class="prog-name">${s.name}</span><span class="prog-val">JOD ${fmt(s.revenue)}</span></div>
+      <div class="prog-bar-wrap"><div class="prog-bar" style="width:${Math.round(s.revenue/maxS*100)}%;background:${COLORS[i%COLORS.length]}"></div></div>
+    </div>`).join('');
+  const total=DATA.regions.reduce((s,r)=>s+r.revenue,0);
+  document.getElementById('regionsTbody').innerHTML=DATA.regions.map((r,i)=>`
+    <tr><td><span class="rk ${i<3?'rk'+(i+1):''}">${i+1}</span></td>
+    <td>${r.name}</td><td class="gt">${fmt(r.revenue)}</td>
+    <td>${fmt(r.units)}</td><td class="bt">${r.pharmacies}</td>
+    <td class="grt">${(r.revenue/total*100).toFixed(1)}%</td></tr>`).join('');
+}
+
+function buildPharmaciesPage(){
+  const total=739649;
+  document.getElementById('pharmTbody').innerHTML=DATA.pharmacies.map((p,i)=>`
+    <tr><td><span class="rk ${i<3?'rk'+(i+1):''}">${i+1}</span></td>
+    <td class="td-name">${p.name}</td>
+    <td class="gt">${fmt(p.revenue)}</td>
+    <td class="bt">${(p.revenue/total*100).toFixed(2)}%</td></tr>`).join('');
+}
+
+function buildReportsPage(){
+  new Chart(document.getElementById('reportChart'),{
+    type:'bar',
+    data:{labels:DATA.monthly.labels,datasets:[
+      {label:'الإيراد (JOD)',data:DATA.monthly.revenue,backgroundColor:'#d4a843bb',borderRadius:6},
+      {label:'المعاملات',data:DATA.monthly.tx,type:'line',borderColor:'#58a6ff',backgroundColor:'transparent',borderWidth:2,pointRadius:4,yAxisID:'y2'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#8b949e',font:{family:'Cairo',size:11}}}},
+      scales:{x:{grid:{color:'#21262d'},ticks:{color:'#8b949e',font:{family:'Cairo',size:10}}},
+              y:{grid:{color:'#21262d'},ticks:{color:'#d4a843',font:{family:'Cairo',size:10},callback:v=>`${Math.round(v/1000)}K`},position:'right'},
+              y2:{grid:{display:false},ticks:{color:'#58a6ff',font:{family:'Cairo',size:10}},position:'left'}}}
+  });
+}
+
+function exportCSV(type){
+  let rows=[];
+  if(type==='products')rows=[['المنتج','الإيراد','الوحدات','متوسط السعر'],...DATA.products.map(p=>[p.name,p.revenue,p.units,(p.revenue/p.units).toFixed(2)])];
+  else if(type==='regions')rows=[['المنطقة','الإيراد','الوحدات','الصيدليات'],...DATA.regions.map(r=>[r.name,r.revenue,r.units,r.pharmacies])];
+  else if(type==='pharmacies')rows=[['الصيدلية','الإيراد'],...DATA.pharmacies.map(p=>[p.name,p.revenue])];
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`advancis_${type}_2025.csv`;a.click();
+  showToast('تم تصدير الملف ✓');
+}
+
+function fmt(n){return Math.round(n).toLocaleString('ar-JO')}
+</script>
+</body>
+</html>
